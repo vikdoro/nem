@@ -1,0 +1,44 @@
+<link rel="import" href="bower_components/polymer/lib/utils/boot.html">
+<link rel="import" href="bower_components/polymer/lib/utils/mixin.html">
+
+<script>
+    (function (Gin) {
+        Gin.LocalizeMixin = Polymer.dedupingMixin((superClass) => {
+            return class extends superClass {
+                constructor() {
+                    super();
+                }
+                static get properties() {
+                    return {
+                        language: {
+                            type: String,
+                            value: () => {
+                                let language = window.navigator.userLanguage || window.navigator.language
+                                return language === 'hu' ? 'hu' : 'en';
+                            },
+                        },
+                        keyMap: {
+                            type: Object,
+                            value: () => {
+                                return {
+                                    'en': {
+                                        '1': 'one'
+                                    },
+                                    'hu': {
+                                        '1': 'egy'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                connectedCallback() {
+                    super.connectedCallback();
+                }
+                localize(code) {
+                    return this.keyMap[this.language][code];
+                }
+            }
+        });
+    })(window.Gin = window.Gin || {});
+</script>

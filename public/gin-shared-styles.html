@@ -1,0 +1,195 @@
+<link rel="import" href="bower_components/polymer/lib/elements/custom-style.html">
+<dom-module id="gin-shared-styles">
+    <template>
+        <style>
+            :host {
+                --gin-grey-100: #9b9b9b;
+                --gin-grey-200: #585D5B;
+                --gin-grey-300: #424242;
+                --gin-grey-400: #212121;
+                --gin-grey-500: #080808;
+                --gin-blue-200: #1565c0;
+            }
+            button {
+                position: relative;
+                padding: 17px 32px 17px;
+                border-radius: 2px;
+                cursor: pointer;
+                border: none;
+                font-family: 'Nunito', sans-serif;
+                font-size: 16px;
+                letter-spacing: .25px;
+                background-color: var(--gin-blue-200);
+                color: white;
+                transition: background 0.3s;
+            }
+            button > *:not(iron-icon) {
+                display: block;
+                width: 88px;
+                text-align: center;
+            }
+            button .label {
+                display: inline-block;
+                line-height: 24px;
+                vertical-align: middle;
+            }
+
+            iron-icon {
+                --iron-icon-fill-color: var(--gin-grey-200);
+            }
+
+            iron-icon.hoverable {
+                --iron-icon-fill-color: var(--gin-grey-200);
+                transition: fill 250ms;
+                border-radius: 50%;
+            }
+
+            iron-icon.hoverable:hover {
+                --iron-icon-fill-color: var(--gin-grey-400);
+            }
+
+            button:hover {
+                background-color: #0388ca;
+                /* change background image to match unhovered style */
+            }
+
+            button.simple {
+                background: transparent;
+                color: var(--gin-grey-200);
+                border: 1px solid var(--gin-grey-100);
+                padding: 15px 31px 15px;
+                margin: 0;
+                transition: border-color 250ms, color 250ms;
+            }
+
+            button.simple:hover{
+                color: var(--gin-grey-400);
+                border-color: var(--gin-grey-300);
+            }
+
+            button.simple>* {
+                vertical-align: middle;
+            }
+
+            button.simple iron-icon {
+                margin-right: 4px;
+            }
+
+            .add-button {
+                width: 48px;
+                height: 22px;
+                position: absolute;
+                color: #757575;
+                border-radius: 12px;
+                transition: color 250ms;
+            }
+
+            .add-button.right-aligned {
+                top: calc(50% - 11px);
+                right: -48px;
+            }
+
+            .add-button.bottom-aligned {
+                position: static;
+                /* left: calc(50% - 11px);
+                    bottom: -32px; */
+            }
+
+            .add-button>*:first-child {
+                margin-right: 4px;
+            }
+
+            .add-button:hover>*:first-child {
+                /* border-right: 1px solid transparent; */
+            }
+
+            .add-button>*:hover {
+                color: #212121;
+                border: 1px solid var(--gin-grey-100);
+                font-weight: 700;
+                /* box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.24); */
+            }
+
+            .add-button>* {
+                width: 18px;
+                height: 18px;
+                font-size: 14px;
+                border-radius: 50%;
+                border: 1px solid transparent;
+                font-weight: 400;
+                transition: border 250ms, font-weight 250ms;
+                /* box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.24); */
+            }
+
+            .add-button.highlighted>* {
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.24);
+            }
+
+            h3 {
+                margin: 0;
+            }
+
+            .l-m-1 {
+                margin: 8px 0;
+            }
+
+            .l-m-2 {
+                margin: 16px 0;
+            }
+
+            .l-mr-2 {
+                margin-right: 16px;
+            }
+
+            .l-relative {
+                position: relative;
+            }
+
+            .concealed-input {
+                border: none;
+            }
+
+            input {
+                font-family: 'Nunito', sans-serif;
+            }
+
+            input:focus {
+                outline: none;
+            }
+
+            .side-menu[horizontal-align="left"] {
+                margin: 12px 0 0 32px;
+            }
+
+            .side-menu[horizontal-align="right"] {
+                margin: 12px 32px 0 0px;
+            }
+
+            .side-menu-container {
+                margin: 0;
+            }
+
+            .side-menu-container>* {
+                padding: 4px 20px 4px 12px;
+            }
+
+            .side-menu-container>*:first-child {
+                padding-top: 12px;
+            }
+
+            .side-menu-container>*:last-child {
+                padding-bottom: 8px;
+            }
+
+            .side-menu-container>*:hover {
+                background: #ddd;
+            }
+
+            .side-menu-container iron-icon {
+                --iron-icon-width: 18px;
+                --iron-icon-height: 18px;
+                margin-right: 8px;
+            }
+        </style>
+    </template>
+</dom-module>

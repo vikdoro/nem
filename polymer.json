@@ -1,0 +1,20 @@
+{
+    "lint": {
+        "rules": [
+            "polymer-2"
+        ]
+    },
+    "entrypoint": "public/index.html",
+    "shell": "public/gin-app.html",
+    "builds": [
+        {
+            "preset": "es5-bundled"
+        }
+    ],
+    "sources": [
+        "public/*/**"
+    ],
+    "extraDependencies": [
+        "public/bower_components/webcomponentsjs/**/*"
+    ]
+}

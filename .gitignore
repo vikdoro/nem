@@ -1,0 +1,15 @@
+# Build
+npm-debug.log
+
+# OSX
+**.DS_Store
+
+#Editor
+.vscode
+
+# App
+public/bower_components
+node_modules
+.tmp
+www
+build

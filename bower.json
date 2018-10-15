@@ -1,0 +1,21 @@
+{
+  "name": "glitch-pg",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^2.0.0",
+    "iron-dropdown": "PolymerElements/iron-dropdown#^2.2.1",
+    "paper-dialog": "^2.1.1",
+    "iron-pages": "PolymerElements/iron-pages#^2.1.1",
+    "iron-icons": "PolymerElements/iron-icons#^2.1.1"
+  },
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

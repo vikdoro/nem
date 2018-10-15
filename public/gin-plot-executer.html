@@ -1,0 +1,346 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="bower_components/polymer/lib/elements/custom-style.html">
+<link rel="import" href="gin-plot.html">
+<link rel="import" href="gin-icons.html">
+<link rel="import" href="gin-shared-styles.html">
+<link rel="import" href="gin-localize-mixin.html">
+
+<dom-module id="gin-plot-executer">
+  <template>
+    <style include="iron-flex
+                    iron-flex-alignment
+                    gin-shared-styles">
+      :host {
+        display: block;
+      }
+
+      #column-container {
+        border: 1px dotted var(--gin-grey-100);
+        border-radius: 8px;
+        margin-bottom: 16px;
+        transition: border-color 250ms;
+      }
+
+      #column-container input.concealed-input {
+        color: var(--gin-grey-300);
+        transition: color 250ms;
+      }
+
+      #column-container:hover {
+        border-color: var(--gin-grey-300);
+      }
+
+      #column-container iron-icon#title-icon {
+        --iron-icon-fill-color: var(--gin-grey-200);
+      }
+
+      #column-container:hover iron-icon#title-icon {
+        --iron-icon-fill-color: var(--gin-grey-300);
+      }
+
+      #column-container:hover input.concealed-input {
+        color: var(--gin-grey-400);
+      }
+
+      #column-header-strip {
+        padding: 16px 24px;
+      }
+
+      .plot-container {
+        padding: 16px 32px 32px;
+      }
+
+      #close-icon {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        --iron-icon-width: 21px;
+        --iron-icon-height: 21px;
+      }
+
+      input {
+        font-weight: 700;
+        font-size: 16px;
+        margin: 8px;
+        padding: 4px 8px;
+      }
+
+      input:focus {
+        border: 1px solid black;
+      }
+
+      button#add-condition-plot {
+        display: block;
+        margin: 16px auto 32px;
+      }
+
+      .dialog-content {
+        margin: 0;
+      }
+
+      #column-header-strip>iron-icon:first-of-type {
+        position: absolute;
+        top: calc(50% - 12px);
+        right: 65px;
+      }
+
+      #column-header-strip>iron-icon:last-of-type {
+        position: absolute;
+        top: calc(50% - 12px);
+        right: 23px;
+      }
+
+      gin-plot {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      gin-plot:not(#default) {
+        margin-bottom: 40px;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+    <template is="dom-repeat" items="{{columns}}" as="column" index-as="columnIndex">
+      <div id="column-container" class="flex l-relative">
+        <div id="column-header-strip" class="horizontal layout center l-relative" on-click="toggleSelected">
+          <div class="flex horizontal layout center">
+            <input class="concealed-input" size$="[[column.label.length]]" value={{column.label::input}}>
+            <div class="flex">
+              <iron-icon id="title-icon" icon$="[[_computeTitleIcon(columnIndex, openedColumns.*)]]" class="hoverable"></iron-icon>
+            </div>
+          </div>
+          <iron-icon class="more-icon hoverable" icon="gin-icons:add" on-click="addPlot" hidden$="[[!_isSelected(columnIndex, openedColumns.*)]]"></iron-icon>
+          <iron-icon id$="side-menu-icon-[[columnIndex]]" class="edit-icon hoverable" icon="gin-icons:more-vert"
+            on-click="openSideMenu" hidden$="[[!_isSelected(columnIndex, openedColumns.*)]]"></iron-icon>
+
+        </div>
+        <div id$="plot-container-[[columnIndex]]" class="plot-container" hidden$="[[!_isSelected(columnIndex, openedColumns.*)]]">
+          <template is="dom-repeat" items="{{column.plots}}" as="plot" index-as="plotIndex">
+            <div class="l-relative">
+              <iron-icon id="close-icon" class="hoverable" icon="gin-icons:close" on-click="removePlot"></iron-icon>
+              <gin-plot column-variables="{{columnVariables}}" edit-mode="[[column.editMode]]" conditions="{{plot.conditions}}"
+                segments="{{plot.segments}}"></gin-plot>
+              <!-- <div class="horizontal layout center-center add-button bottom-aligned">
+                <div class="vertical layout center-center" on-click="addPlot">+</div>
+                <div class="vertical layout center-center" on-click="removePlot">-</div>
+              </div> -->
+            </div>
+          </template>
+          <gin-plot id="default" column-variables="{{columnVariables}}" edit-mode="[[column.editMode]]" segments="{{column.defaultSegments}}"
+            sibling-count="{{column.plots.length}}" no-conditions></gin-plot>
+        </div>
+      </div>
+      <paper-dialog id$="side-menu-[[columnIndex]]" vertical-align="top" horizontal-align="left" on-iron-overlay-closed="removeScrollListener">
+        <div class="dialog-content no-padding">
+          <div class="side-menu-container">
+            <!-- <div class="horizontal layout">
+              <iron-icon icon="gin-icons:content-copy"></iron-icon>
+              <div>Copy</div>
+            </div> -->
+            <div class="horizontal layout" on-click="deleteColumn">
+              <iron-icon icon="gin-icons:delete"></iron-icon>
+              <div>Delete</div>
+            </div>
+          </div>
+        </div>
+      </paper-dialog>
+    </template>
+  </template>
+  <script>
+    class ginPlotExecuter extends Gin.LocalizeMixin(Polymer.Element) {
+      static get is() { return 'gin-plot-executer'; }
+      static get properties() {
+        return {
+          columns: {
+            type: Array,
+            value: () => [],
+            notify: true
+          },
+          selected: {
+            type: Boolean,
+            value: false
+          },
+          openedColumns: {
+            type: Array,
+            value: () => []
+          },
+          columnVariables: {
+            type: Array,
+            value: () => [],
+            notify: true
+          },
+          editMode: {
+            type: Boolean,
+            value: false
+          }
+        }
+      }
+      constructor() {
+        super();
+        this.resizeSideMenu = this.resizeSideMenu.bind(this);
+      }
+      runPlots(rows, headers) {
+        this.columns.forEach((column, columnIndex) => {
+          const plots = [...this.shadowRoot.querySelector(`#plot-container-${columnIndex}`)
+            .querySelectorAll('gin-plot')];
+          console.log('plots mofff', column, plots)
+          rows.map(row => {
+            row[column.label] = null;
+            return row;
+          });
+          headers.push(column.label);
+
+          // Run plots for each row
+          rows.forEach((row, rowIndex) => {
+            for (const [plotIndex, plot] of plots.entries()) {
+              // If row is not complete, don't run any plot
+              if (Object.keys(row).length !== headers.length) {
+                console.log('Not a valid row', row);
+                rows.splice(rowIndex, 1);
+                return;
+              }
+              if (plotIndex === plots.length - 1) {
+                const defaultPlotElement = this.shadowRoot.querySelector(`#plot-container-${columnIndex}`)
+                  .querySelector('#default');
+                console.log('default plot');
+                console.log('column', column.label, defaultPlotElement.computeReturn(row))
+                console.log('say something', defaultPlotElement.segments);
+                // rows[rowIndex][column.label] = this.$.default.;
+                rows[rowIndex][column.label] =
+                  this.roundIfNumber(defaultPlotElement.computeReturn(row));
+                break;
+              } else if (plot.run(row)) {
+                console.log('plot ' + plotIndex);
+                console.log('column', column.label, plot.computeReturn(row))
+                rows[rowIndex][column.label] = this.roundIfNumber(plot.computeReturn(row));
+                break;
+              }
+            };
+          });
+          console.log('this.rows', rows);
+        });
+        return { headers, rows };
+      }
+      roundIfNumber(n) {
+        if (!this._isNumber(n)) {
+          return n;
+        }
+        let negative = false;
+        if (n < 0) {
+          negative = true;
+          n = n * -1;
+        }
+        const multiplicator = Math.pow(10, 2);
+        n = parseFloat((n * multiplicator).toFixed(11));
+        n = (Math.round(n) / multiplicator).toFixed(2);
+        if (negative) {
+          n = (n * -1).toFixed(2);
+        }
+        // Get rid of unnecessary zeroes
+        n = +n;
+        return n;
+      }
+      addFirstPlot(e) {
+        const columnIndex = e.model.columnIndex;
+        this.set(`columns.${columnIndex}.plots`, [{}]);
+        this.notifyPath(`columns.${columnIndex}.plots.length`);
+      }
+      addPlot(e) {
+        e.stopPropagation();
+        const columnIndex = e.model.columnIndex;
+        if (!this.columns[columnIndex].plots) {
+          this.set(`columns.${columnIndex}.plots`, []);
+        }
+        this.unshift(`columns.${columnIndex}.plots`, {
+          conditions: [{ "x": { "label": "column", "type": "string", "val": "notSet", "tableValue": true }, "operator": { "label": "is" }, "yLabel": "something" }],
+          segments: [
+            {
+              label: '0'
+            }
+          ]
+        });
+      }
+      removePlot(e) {
+        e.stopPropagation();
+        const columnIndex = e.model.__dataHost.__dataHost.columnIndex;
+        const plotIndex = e.model.plotIndex;
+        this.splice(`columns.${columnIndex}.plots`, plotIndex, 1);
+        this.notifyPath(`columns.${columnIndex}.plots.length`);
+      }
+      // Method used by parent
+      addColumn() {
+        this.push(`columns`, {
+          label: 'untitled',
+          defaultSegments: [{ label: '0' }],
+          plots: []
+        });
+      }
+      openSideMenu(e) {
+        e.stopPropagation();
+        this.shadowRoot.querySelector(`#side-menu-${e.model.columnIndex}`).set('positionTarget',
+          this.shadowRoot.querySelector(`#side-menu-icon-${e.model.columnIndex}`));
+        this.shadowRoot.querySelector(`#side-menu-${e.model.columnIndex}`).open();
+        document.addEventListener('scroll', this.resizeSideMenu);
+      }
+      removeScrollListener() {
+        document.removeEventListener('scroll', this.resizeSideMenu);
+      }
+      resizeSideMenu() {
+        // refactor
+        const allMenus = [...this.shadowRoot.querySelectorAll('paper-dialog')];
+        for (var i = 0; i < allMenus.length; i++) {
+          if (allMenus[i].opened) {
+            this.hideMenuIfOutOfBound(allMenus[i]);
+            allMenus[i].notifyResize();
+          }
+        }
+      }
+      hideMenuIfOutOfBound(element) {
+        const rect = element.getBoundingClientRect();
+        if (rect.top < 48 || (window.innerHeight - rect.bottom) < 48) {
+          element.close();
+        }
+      }
+      toggleSelected(e) {
+        const indexInOpened = this.openedColumns.indexOf(e.model.columnIndex);
+        const indexInAll = e.model.columnIndex;
+        if (indexInOpened === -1) {
+          this.push('openedColumns', indexInAll);
+        } else {
+          this.splice('openedColumns', indexInOpened);
+        }
+      }
+      toggleEditMode(e) {
+        console.log(e.model.columnIndex);
+        const currentValue = this.columns[e.model.columnIndex].editMode;
+        this.set(`columns.${e.model.columnIndex}.editMode`,
+          typeof currentValue === 'undefined' ? true : !currentValue);
+      }
+      deleteColumn(e) {
+        this.splice('columns', e.model.columnIndex, 1);
+        this.shadowRoot.querySelector(`#side-menu-${e.model.columnIndex}`).close();
+      }
+      _computeControlVisibility(editMode, arrayLength, instanceIndex) {
+        return editMode && this._isItemLast(arrayLength, instanceIndex);
+      }
+      _computeTitleIcon(instanceIndex) {
+        return this._isSelected(instanceIndex) ?
+          'gin-icons:keyboard-arrow-down' : 'gin-icons:keyboard-arrow-right';
+      }
+      _isSelected(i) {
+        return this.openedColumns.indexOf(i) !== -1;
+      }
+      _isItemLast(arrayLength, index) {
+        return arrayLength - 1 === index;
+      }
+      _isNumber(n) {
+        return !isNaN(parseFloat(n)) && !isNaN(n - 0);
+      }
+    }
+    customElements.define(ginPlotExecuter.is, ginPlotExecuter);
+  </script>
+</dom-module>

@@ -1,0 +1,470 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="gin-plot-executer.html">
+<link rel="import" href="gin-dialog.html">
+<link rel="import" href="gin-icons.html">
+<link rel="import" href="gin-shared-styles.html">
+
+
+<dom-module id="gin-rule-editor">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment iron-flex-reverse gin-shared-styles">
+      :host {
+        display: block;
+      }
+      #editor-container {
+        border: 1px dashed var(--gin-grey-100);
+        color: var(--gin-grey-300);
+        transition: border-color 250ms, color 250ms;
+      }
+
+      #editor-container:hover {
+        color: var(--gin-grey-500);
+        border-color: var(--gin-grey-300);
+      }
+      #editor-container:hover iron-icon#dropdown-icon {
+        --iron-icon-fill-color: var(--gin-grey-300);
+      }
+
+      nav {
+        width: 100%;
+        box-sizing: border-box;
+        background: #f1f6f4;
+        padding: 8px 24px 8px;
+        margin: 0 auto 32px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      nav>*:first-child {
+        color: var(--gin-grey-200);
+        padding: 8px 0;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      nav>iron-icon:first-of-type {
+        position: absolute;
+        top: calc(50% - 12px);
+        right: 66px;
+      }
+
+      nav>iron-icon:last-of-type {
+        position: absolute;
+        top: calc(50% - 12px);
+        right: 24px;
+      }
+
+      nav>.selected {
+        color: #2e2e2e;
+        position: relative;
+        padding: 8px 24px;
+        border-radius: 3px;
+      }
+
+      nav>.selected:after {
+        display: block;
+        position: absolute;
+        bottom: 1px;
+        left: 0;
+        content: '';
+        width: 100%;
+        height: 2px;
+        background: #333;
+        color: #2e2e2e;
+        opacity: 0.7;
+        border-radius: 3px;
+      }
+
+      #title-bar>*:first-child {
+        margin-right: 24px;
+      }
+      #title-bar {
+        padding: 32px;
+      }
+      :host([selected]) #title-bar {
+        padding-bottom: 0;
+      }
+
+      #editor-body {
+        padding: 0 32px 32px;
+      }
+
+      #file-upload {
+        position: relative;
+      }
+
+      .more-icon {
+        --iron-icon-width: 24px;
+        --iron-icon-height: 24px;
+      }
+
+      input.file-input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 0;
+        width: 0;
+        opacity: 0;
+      }
+      #download-button-container iron-icon {
+        position: absolute;
+        --iron-icon-width: 32px;
+        --iron-icon-height: 32px;
+        top: calc(50% - 16px);
+        left: -48px;
+      }
+
+      #action-menu {
+        margin: 24px 0 32px;
+      }
+
+      #action-menu>span {
+        color: var(--gin-grey-100);
+        margin: 0 16px;
+        width: 80px;
+        text-align: center;
+        transition: color 200ms;
+      }
+
+      #action-menu>span:hover {
+        color: var(--gin-grey-200);
+      }
+
+      #action-menu>span.selected {
+        color: var(--gin-grey-300);
+        border-bottom: 1px solid var(--gin-blue-200);
+      }
+
+      .key {
+        width: 104px;
+        margin: 8px 16px;
+        padding: 4px 0;
+        border-bottom: 1px solid #D9D9D9;
+        height: 30px;
+      }
+
+      #gin-settings {
+        padding: 0 8px;
+      }
+
+      #title-input-container {
+        margin: 0 16px 32px 8px;
+      }
+
+      #title-input-container > label {
+        margin-right: 16px;
+      }
+
+      input#title-input {
+        font-size: 14px;
+        padding: 4px 0;
+        margin: 0 8px;
+        border: none;
+        border-bottom: 1px solid #707070;
+      }
+
+      #add-action-btn {
+        background: #f1f6f4;
+        margin-top: 16px;
+        transition: background 250ms;
+      }
+
+      #add-action-btn:hover {
+        border-color: var(--gin-grey-100);
+        background: #ECF1EF;
+      }
+
+      .dialog-content {
+        margin: 0;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+    <div id="editor-container">
+      <div id="title-bar" class="horizontal layout center" on-click="toggleSelected">
+        <div id="song-title">[[title]]</div>
+        <div class="flex">
+          <iron-icon id="dropdown-icon" icon$="[[_computeTitleIcon(selected)]]" class="hoverable"></iron-icon>
+        </div>
+        <button on-click="uploadFile" hidden$="[[downloadReady]]">
+          <span>Upload csv</span>
+          <input type="file" class="file-input" />
+        </button>
+        <div id="download-button-container" class="l-relative" hidden$="[[!downloadReady]]">
+          <button on-click="downloadFile">
+            <span>Download csv</span>
+            <input type="file" class="file-input" />
+          </button>
+          <iron-icon icon="gin-icons:refresh" on-click="refreshExecuter"></iron-icon>
+        </div>
+      </div>
+      <div id="editor-body" hidden$="[[!selected]]">
+        <div id="action-menu" class="horizontal layout center-center" on-click="selectSubSection">
+          <span class="selected" data-section="actions">Actions</span>
+          <span data-section="settings">Settings</span>
+        </div>
+        <iron-pages selected="[[section]]" attr-for-selected="name" fallback-selection="fallback">
+          <div name="actions">
+            <template is="dom-repeat" items="{{actions}}" as="action" index-as="actionIndex">
+              <nav class="layout horizontal center-center l-relative">
+                <div class="flex layout horizontal center-center">
+                  <div class="selected">[[action.type]]</div>
+                </div>
+                <iron-icon class="more-icon hoverable" icon="gin-icons:add" on-click="signalNew"></iron-icon>
+                <iron-icon id$="side-menu-icon-[[actionIndex]]" on-click="openSideMenu" class="more-icon hoverable"
+                  icon="gin-icons:more-vert"></iron-icon>
+              </nav>
+              <gin-plot-executer id$="executer-[[actionIndex]]" columns="{{action.columns}}" column-variables="{{columnVariables}}"
+                edit-mode="[[editMode]]"></gin-plot-executer>
+              <paper-dialog id$="side-menu-[[actionIndex]]" class="side-menu" vertical-align="top" horizontal-align="left"
+                on-iron-overlay-closed="removeScrollListener">
+                <div class="dialog-content no-padding">
+                  <div class="side-menu-container">
+                    <!-- <div class="horizontal layout">
+                      <iron-icon icon="gin-icons:content-copy"></iron-icon>
+                      <div>Copy</div>
+                    </div> -->
+                    <div class="horizontal layout" on-click="deleteAction">
+                      <iron-icon icon="gin-icons:delete"></iron-icon>
+                      <div>Delete</div>
+                    </div>
+                  </div>
+                </div>
+              </paper-dialog>
+            </template>
+            <div class="layout horizontal center-center">
+              <button id="add-action-btn" class="simple" on-click="addAction">
+                <div class="horizontal layout center-center">
+                  <iron-icon icon="gin-icons:add"></iron-icon>
+                  <span>Action</span>
+                </div>
+              </button>
+            </div>
+          </div>
+          <div name="settings">
+            <div id="gin-settings" class="vertical layout center">
+              <div id="title-input-container" class="horizontal layout center">
+                <label for="title-input">Name:</label>
+                <input id="title-input" type="text" value="{{title::change}}" size="35">
+              </div>
+              <!-- <button class="simple">Import settings</button> -->
+              <div id="settings-action" class="horizontal layout center-center">
+                <button class="simple" on-click="deleteGin">
+                  <!-- <iron-icon icon="gin-icons:delete"></iron-icon> -->
+                  <div>Delete gin</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </iron-pages>
+        <!-- <button class="simple" on-click="uploadFile">
+          <iron-icon icon="gin-icons:add"></iron-icon>
+          <span>Column</span>
+        </button> -->
+      </div>
+    </div>
+    <gin-dialog id="dialog" on-val-changed="onValChanged"></gin-dialog>
+  </template>
+  <script>
+    class GinRuleEditor extends Polymer.Element {
+      static get is() { return 'gin-rule-editor'; }
+      static get properties() {
+        return {
+          title: {
+            type: String,
+            value: null,
+            notify: true
+          },
+          actions: {
+            type: Array,
+            value: () => [],
+            notify: true
+
+          },
+          selected: {
+            type: Boolean,
+            value: false,
+            notify: true,
+            reflectToAttribute: true
+          },
+          downloadReady: {
+            type: Boolean,
+            value: false
+          },
+          outputCsv: {
+            type: Object,
+            value: () => {
+              return {};
+            }
+          },
+          columnVariables: {
+            type: Array,
+            value: () => []
+          },
+          section: {
+            type: String,
+            value: 'actions'
+          },
+          actionOptions: {
+            type: Array,
+            value: () => [{
+              label: 'add',
+              type: 'add'
+            }]
+          },
+          editedProperty: {
+            type: String,
+            value: null
+          },
+          editMode: {
+            type: Boolean,
+            computed: '_isEq(mode, "edit")'
+          }
+        }
+      }
+      constructor() {
+        super();
+        this.onSelectFile = this.onSelectFile.bind(this);
+        this.resizeSideMenu = this.resizeSideMenu.bind(this);
+      }
+      connectedCallback() {
+        super.connectedCallback();
+        [...this.shadowRoot.querySelectorAll('.file-input')].forEach(element => {
+          element.addEventListener('input', this.onSelectFile);
+        });
+      }
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        [...this.shadowRoot.querySelectorAll('.file-input')].forEach(element => {
+          element.removeEventListener('input', this.onSelectFile);
+        });
+      }
+      run(rows, headers) {
+        for (let i = 0; i < this.actions.length; i++) {
+          console.log(`executer-${i}`)
+          this.set('outputCsv', this.shadowRoot.querySelector(`#executer-${i}`).runPlots(rows, headers));
+        };
+      }
+      uploadFile(e) {
+        e.stopPropagation();
+        e.currentTarget.querySelector('input').click();
+      }
+      onSelectFile(e) {
+        e.stopPropagation();
+        Papa.parse(e.target.files[0], {
+          header: true,
+          dynamicTyping: true,
+          complete: (data) => {
+            console.log('ye', `#editor-${this.selected}`);
+            console.log('this', this);
+            this.run(data.data, data.meta.fields);
+            this.downloadReady = true;
+          }
+        });
+        e.target.value = null;
+      }
+      downloadFile(e) {
+        e.stopPropagation();
+        const blob = new Blob([
+          Papa.unparse({ fields: this.outputCsv.headers, data: this.outputCsv.rows }, { delimiter: ';' })]);
+        const a = window.document.createElement('a');
+        a.href = window.URL.createObjectURL(blob, { type: 'text/plain' });
+        a.download = 'success.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+      openOptions(e) {
+        this.editedProperty = e.target.getAttribute('data-label');
+        const options = this[`${this.editedProperty}Options`];
+        this.$.dialog.openOptions(e.target, options);
+      }
+      addAction() {
+        if (!this.actions) {
+          this.set('actions', []);
+        }
+        this.push('actions', {
+          type: 'Add columns',
+          columns: []
+        });
+        this.notifyPath('actions');
+      }
+      _computeTitleIcon(selected) {
+        return selected ? 'gin-icons:keyboard-arrow-down' : 'gin-icons:keyboard-arrow-right';
+      }
+      openSideMenu(e) {
+        const actionIndex = e.model.actionIndex;
+        this.shadowRoot.querySelector(`#side-menu-${actionIndex}`).set('positionTarget', this.shadowRoot.querySelector(`#side-menu-icon-${actionIndex}`));
+        this.shadowRoot.querySelector(`#side-menu-${actionIndex}`).open();
+        document.addEventListener('scroll', this.resizeSideMenu);
+      }
+      removeScrollListener() {
+        document.removeEventListener('scroll', this.resizeSideMenu);
+      }
+      resizeSideMenu() {
+        const allMenus = this.shadowRoot.querySelectorAll('.side-menu');
+        console.log('allMENUSSSS', allMenus.length);
+        for (var i = 0; i < allMenus.length; i++) {
+          this.hideMenuIfOutOfBound(allMenus[i]);
+          allMenus[i].notifyResize();
+        }
+      }
+      hideMenuIfOutOfBound(element) {
+        const rect = element.getBoundingClientRect();
+        if (rect.top < 48 || (window.innerHeight - rect.bottom) < 48) {
+          element.close();
+        }
+      }
+      signalNew(e) {
+        this.shadowRoot.querySelector(`#executer-${e.model.actionIndex}`).addColumn();
+      }
+      selectSubSection(e) {
+        console.log('select section');
+        const target = e.composedPath()[0];
+        const sectionString = target.getAttribute('data-section');
+        const menuItems = this.$['action-menu'].querySelectorAll('span');
+        for (let i = 0; i < menuItems.length; i++) {
+          console.log(menuItems[i].getAttribute('data-section'))
+          if (menuItems[i].getAttribute('data-section') === sectionString) {
+            menuItems[i].classList.add('selected');
+          } else {
+            menuItems[i].classList.remove('selected');
+          }
+        }
+        this.section = e.composedPath()[0].getAttribute('data-section');
+      }
+      toggleSelected(e) {
+        this.selected = !this.selected;
+      }
+      deleteAction(e) {
+        this.splice('actions', e.model.actionIndex, 1);
+      }
+      deleteGin() {
+        this.dispatchEvent(
+          new CustomEvent('delete-request', {
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      refreshExecuter(e) {
+        e.stopPropagation();
+        this.downloadReady = false;
+      }
+      _isItemLast(instanceIndex, arrayLength) {
+        return instanceIndex === arrayLength - 1;
+      }
+      isEq(instance, target) {
+        return instance === target;
+      }
+      _isEq(target, instance) {
+        return target === instance;
+      }
+    }
+    customElements.define(GinRuleEditor.is, GinRuleEditor);
+  </script>
+</dom-module>
