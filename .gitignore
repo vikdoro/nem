@@ -8,7 +8,7 @@ npm-debug.log
 .vscode
 
 # App
-public/bower_components
+bower_components
 node_modules
 .tmp
 www

@@ -2,7 +2,7 @@
   "name": "glitch-pg",
   "version": "1.0.0",
   "scripts": {
-    "start": "polyserve --port $PORT --root public",
+    "start": "polyserve --port $PORT",
     "build": "gulp build"
   },
   "dependencies": {
