@@ -2,297 +2,300 @@
 <html>
 
 <head>
-    <!-- update the version number as needed -->
-    <!-- <script defer src="/__/firebase/5.3.1/firebase-app.js"></script> -->
-    <!-- include only the Firebase features as you need -->
-    <!-- <script defer src="/__/firebase/5.3.1/firebase-firestore.js"></script> -->
-    <!-- <script defer src="/__/firebase/5.3.1/firebase-auth.js"></script> -->
-    <!-- initialize the SDK after all desired features are loaded -->
-    <!-- <script defer src="/__/firebase/init.js"></script> -->
-
-    <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
-    <!-- <link rel="import" href="tt-rule-editor.html"> -->
-    <link rel="import" href="gin-app.html">
-    <link rel="import" href="gin-auth.html">
-    <link href="https://fonts.googleapis.com/css?family=Nunito:400,700" rel="stylesheet">
-    <style is="custom-style">
+    <style>
         * {
             box-sizing: border-box;
             font-family: 'Nunito', sans-serif;
             user-select: none;
         }
 
-        body {
+        html, body {
+            height: 100%;
             margin: 0;
+        }
+
+        #loading-shell {
+            height: 100%;
+        }
+
+        #loading-shell>div {
+            height: calc(100% - 70px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        gin-app {
+            display: none;
+        }
+
+        nav {
+            opacity: 1;
+            display: flex;
+            flex-direction: row;
+            padding: 16px 24px;
+            box-shadow: 0 0px 4px rgba(0, 0, 0, 0.16);
+        }
+        nav>.brand {
+            font-size: 28px;
+            letter-spacing: 3.8px;
+            color: #212121;
+            border-radius: 5px;
         }
 
         iron-overlay-backdrop {
             --iron-overlay-backdrop-opacity: 0.7;
             pointer-events: none;
         }
+
+        .lds-ripple {
+  display: inline-block;
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+.lds-ripple div {
+  position: absolute;
+  border: 4px solid #212121;
+  opacity: 1;
+  border-radius: 50%;
+  animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+.lds-ripple div:nth-child(2) {
+  animation-delay: -0.5s;
+}
+@keyframes lds-ripple {
+  0% {
+    top: 28px;
+    left: 28px;
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  100% {
+    top: -1px;
+    left: -1px;
+    width: 58px;
+    height: 58px;
+    opacity: 0;
+  }
+}
+    @font-face {
+        font-family: 'Nunito';
+        font-style: normal;
+        font-weight: 400;
+        src: url('./assets/fonts/nunito-v9-latin-regular.eot'); /* IE9 Compat Modes */
+        src: url('./assets/fonts/nunito-v9-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+            url('./assets/fonts/nunito-v9-latin-regular.woff') format('woff'), /* Modern Browsers */
+            url('./assets/fonts/nunito-v9-latin-regular.ttf') format('truetype'); /* Safari, Android, iOS */
+    }
+    @font-face {
+        font-family: 'Nunito';
+        font-style: bold;
+        font-weight: 700;
+        src: url('assets/fonts/nunito-v9-latin-700.eot'); /* IE9 Compat Modes */
+        src: url('assets/fonts/nunito-v9-latin-700.woff2') format('woff2'), /* Super Modern Browsers */
+            url('assets/fonts/nunito-v9-latin-700.woff') format('woff'), /* Modern Browsers */
+            url('assets/fonts/nunito-v9-latin-700.ttf') format('truetype'); /* Safari, Android, iOS */
+    }
     </style>
 </head>
 
 <body>
-    <gin-app id="app" on-open-auth="openAuth"></gin-app>
-    <gin-auth id="auth"></gin-auth>
-    <script>
-        var setup;
-        var db;
-        document.addEventListener('DOMContentLoaded', function () {
-            if (setup) {
-                return;
+    <div id="loading-shell">
+        <nav class="horizontal layout">
+            <div class="brand">GIN</div>
+        </nav>
+        <div>
+            <div class="lds-ripple">
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+    </div>
+    <gin-app id="app" on-rules-change="lala"></gin-app>
+</body>
+<script src="/__/firebase/5.5.5/firebase-app.js"></script>
+<script src="/__/firebase/5.5.5/firebase-auth.js"></script>
+<script src="/__/firebase/5.5.5/firebase-firestore.js"></script>
+<script src="/__/firebase/init.js"></script>
+<script type="module">
+
+    // Initialize Cloud Firestore through Firebase
+    const db = firebase.firestore();
+    const settings = { timestampsInSnapshots: true };
+    db.settings(settings);
+
+    firebase.auth().onAuthStateChanged(function (user) {
+        if (user) {
+            console.log('user', user);
+            if (appReady) {
+                document.getElementById('app').set('user', user);
             }
-            console.log('event listener added')
-            document.documentElement.addEventListener('open-auth', openAuth);
-            document.documentElement.addEventListener('firebase-request', e => {
-                if (e.detail.type === 'signup') {
-                    console.log('firebase received in index');
-                    firebase.auth().createUserWithEmailAndPassword(e.detail.email, e.detail.password)
-                        .then((res) => {
-                            console.log('signed up ID', res.user.email);
-                            db.collection('users').doc(res.user.email).set({
-                                email: res.user.email,
-                                gins: []
-                            })
-                                .then(function () {
-                                    console.log("User written successfuly");
-                                })
-                                .catch(function (error) {
-                                    console.error("Error adding user: ", error);
-                                });
-                        })
-                        .catch(function (error) {
-                            // Handle Errors here.
-                            var errorCode = error.code;
-                            var errorMessage = error.message;
-                            // ...
-                        });
-
-                } else if (e.detail.type === 'login') {
-                    console.log('gin login', e.detail.email, e.detail.password);
-                    firebase.auth().signInWithEmailAndPassword(e.detail.email, e.detail.password)
-                        .catch(function (error) {
-                            // Handle Errors here.
-                            var errorCode = error.code;
-                            var errorMessage = error.message;
-                        });
-                } else if (e.detail.type === 'signout') {
-                    firebase.auth().signOut().then(() => {
-                        console.log('Signed Out');
-                         document.getElementById('app').set('user', null);
-                         document.getElementById('app').set('rules', []);
-
-                    }, function (error) {
-                        console.error('Sign Out Error', error);
+            fetchedUser = user;
+            db.collection('gins').where('members', 'array-contains', user.uid)
+                .get()
+                .then(function (querySnapshot) {
+                    const tempArray = [];
+                    querySnapshot.forEach(function (doc) {
+                        // doc.data() is never undefined for query doc snapshots
+                        console.log(doc.id, " => ", doc.data());
+                        tempArray.push(Object.assign({ id: doc.id }, doc.data()));
                     });
-                }  else if (e.detail.type === 'deleteGin') {
-                    console.log('delete gin with index:', e.detail.ginIndex);
-                } else if (e.detail.type === 'editGin') {
+                    document.getElementById('app').set('rules', tempArray);
 
-                } else if (e.detail.type === 'create-gin') {
-                    let docReference = db.collection('gins').doc();
-                    const user = document.getElementById('app').user;
-                    console.log('adding a gin', docReference.id);
-                    docReference.set(Object.assign({ timestamp: firebase.firestore.FieldValue.serverTimestamp(), members: [user.uid] }, e.detail.gin))
-                        .then(function (docRef) {
-                            console.log('Success adding document', docRef);
-                               
-                        })
-                        .catch(function (error) {
-                            console.error('Error adding document: ', error);
-                        });
-                } else if (e.detail.type === 'edit-gin') {
-                    db.collection('gins').doc(e.detail.docId). update({
-                        'title': e.detail.title,
-                        'actions': e.detail.newState.actions
+                })
+                .catch(function (error) {
+                    console.log("Error getting documents: ", error);
+                })
+                .finally(() => {
+                    concludeLoading('user');
+                });
+            // User is signed in.
+        } else {
+            console.log('no user');
+            concludeLoading('user');
+            //TODO: set error
+            // document.getElementById('auth').setError();
+            // No user is signed in.
+        }
+    });
+
+    document.documentElement.addEventListener('firebase-request', e => {
+        if (e.detail.type === 'signup') {
+            console.log('firebase received in index');
+            firebase.auth().createUserWithEmailAndPassword(e.detail.email, e.detail.password)
+                .then((res) => {
+                    console.log('signed up ID', res.user.email);
+                    db.collection('users').doc(res.user.email).set({
+                        email: res.user.email,
+                        gins: []
                     })
                         .then(function () {
-                            console.log("Document successfully updated!");
-                        });
-
-                }
-            })
-            try {
-                // Initialize Firebase
-                var config = {
-                    apiKey: "AIzaSyD-qcQxFOyM4wand0BMEYmeuqlEdXk_gpc",
-                    authDomain: "gin-app.firebaseapp.com",
-                    databaseURL: "https://gin-app.firebaseio.com",
-                    projectId: "gin-app",
-                    storageBucket: "gin-app.appspot.com",
-                    messagingSenderId: "835112964662"
-                };
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(config);
-                }
-
-                // Initialize Cloud Firestore through Firebase
-                db = firebase.firestore();
-                const settings = { timestampsInSnapshots: true };
-                db.settings(settings);
-
-            } catch (e) {
-                console.error(e);
-                // Set dummy data for development if firebase fails
-                // return;
-                document.getElementById('app').set('rules', [
-                    {
-                        title: 'Alpha rule 1',
-                        id: 1,
-                        section: 'actions',
-                        actions: [
-                            {
-                                type: 'Add columns',
-                                columns: [
-                                    {
-                                        label: 'John',
-                                        defaultSegments: [{
-                                            label: 'value',
-                                            tableValue: true
-                                        },
-                                        {
-                                            label: '*'
-                                        },
-                                        {
-                                            label: '0.5'
-                                        }
-                                        ],
-                                        plots: [
-                                            {
-                                                conditions: [{ "x": { "label": "type", "type": "string", "val": "notSet", "tableValue": true }, "operator": { "label": "is" }, "y": "bond" }],
-                                                segments: [
-                                                    {
-                                                        label: 'value',
-                                                        tableValue: true
-                                                    },
-                                                    {
-                                                        label: '*'
-                                                    },
-                                                    {
-                                                        label: '0.8'
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        label: 'Paul',
-                                        defaultSegments: [
-                                            {
-                                                label: 'value',
-                                                tableValue: true
-                                            },
-                                            {
-                                                label: '*'
-                                            },
-                                            {
-                                                label: '1'
-                                            }
-                                        ],
-                                    }
-                                ]
-                            }
-                        ],
-                        columnVariables: [{
-                            label: 'type',
-                            type: 'string',
-                            tableValue: true
-                        }, {
-                            label: 'value',
-                            type: 'number',
-                            tableValue: true
-                        }]
-                    }, {
-                        title: 'Beta rule 2',
-                        id: 2,
-                        section: 'actions',
-                        columnVariables: [{
-                            label: 'type',
-                            type: 'string',
-                            tableValue: true
-                        }, {
-                            label: 'value',
-                            type: 'number',
-                            tableValue: true
-                        }]
-                    }, {
-                        title: 'Charlie rule 3',
-                        id: 3,
-                        section: 'actions',
-                        columnVariables: [{
-                            label: 'type',
-                            type: 'string',
-                            tableValue: true
-                        }, {
-                            label: 'value',
-                            type: 'number',
-                            tableValue: true
-                        }]
-                    }
-                ])
-
-            }
-            function settingGins(ginReferences) {
-                ginReferences.forEach(ginReference => {
-                    var ginRef = db.collection('gins').doc(ginReference);
-                    ginRef.get()
-                        .then(function (gin) {
-                            if (gin.exists) {
-                                console.log('User data:', user.data());
-                                userRef.get()
-                                    .then(function (user) {
-                                        if (user.exists) {
-                                            console.log('User data:', user.data());
-    
-                                        } else {
-                                            // doc.data() will be undefined in this case
-                                            console.log('No such user!');
-                                        }
-                                    }).catch(function (error) {
-                                        console.log('Error getting user:', error);
-                                    });
-                            } else {
-                                // doc.data() will be undefined in this case
-                                console.log('No such user!');
-                            }
-                        });
-                });
-            }
-            function openAuth () {
-                console.log('open auth index')
-                document.getElementById('auth').open();
-            }
-            firebase.auth().onAuthStateChanged(function (user) {
-                if (user) {
-                    console.log('user', user);
-                    document.getElementById('auth').close();
-                    document.getElementById('app').set('user', user);
-                    db.collection('gins').where('members', 'array-contains', user.uid)
-                        .get()
-                        .then(function (querySnapshot) {
-                            const tempArray = [];
-                            querySnapshot.forEach(function (doc) {
-                                // doc.data() is never undefined for query doc snapshots
-                                console.log(doc.id, " => ", doc.data());
-                                tempArray.push(Object.assign({id: doc.id}, doc.data()));
-                            });
-                            document.getElementById('app').set('rules', tempArray);
+                            console.log("User written successfuly");
                         })
                         .catch(function (error) {
-                            console.log("Error getting documents: ", error);
+                            console.error("Error adding user: ", error);
                         });
-                    // User is signed in.
-                } else {
-                    console.log('no user');
-                    //TODO: set error
-                    // document.getElementById('auth').setError();
-                    // No user is signed in.
-                }
+                })
+                .catch(function (error) {
+                    // Handle Errors here.
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    // ...
             });
-            setup = true;
+
+        } else if (e.detail.type === 'login') {
+            console.log('gin login', e.detail.email, e.detail.password);
+            firebase.auth().signInWithEmailAndPassword(e.detail.email, e.detail.password)
+                .then(() => {
+                    document.getElementById('app').closeAuth();
+                })
+                .catch(function (error) {
+                    // Handle Errors here.
+                    document.getElementById('app').displayAuthError();
+                });
+                
+        } else if (e.detail.type === 'signout') {
+            firebase.auth().signOut().then(() => {
+                console.log('Signed Out');
+                document.getElementById('app').set('user', null);
+                document.getElementById('app').set('rules', []);
+
+            }, function (error) {
+                console.error('Sign Out Error', error);
+            });
+        } else if (e.detail.type === 'delete-gin') {
+            console.log('delete gin with index:', e.detail.docId);
+            db.collection('gins').doc(e.detail.docId).delete().then(function () {
+                console.log('Gin successfully deleted!');
+            }).catch(function (error) {
+                console.error('Error removing gin: ', error);
+            });
+
+        } else if (e.detail.type === 'edit-gin') {
+            console.log('editing gin', e.detail);
+            db.collection('gins').doc(e.detail.docId).set(Object.assign({
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            }, e.detail.newState))
+                .then(function (docRef) {
+                    console.log('Success updating gin');
+                })
+                .catch(function (error) {
+                    console.error('Error updating gin: ', error);
+                });
+        } else if (e.detail.type === 'create-gin') {
+            console.log('adding a gin');
+            const user = document.getElementById('app').user;
+            db.collection('gins').doc().set(Object.assign({
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    members: [user.uid] }, e.detail.gin))
+                .then(function (docRef) {
+                    console.log('Success adding document', docRef);
+                })
+                .catch(function (error) {
+                    console.error('Error adding document: ', error);
+                });
+        } else if (e.detail.type === 'edit-gin') {
+            db.collection('gins').doc(e.detail.docId).update({
+                'title': e.detail.title,
+                'actions': e.detail.newState.actions
+            })
+            .then(function () {
+                console.log("Document successfully updated!");
+            });
+
+        }
+    });
+</script>
+<script src="node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js" defer></script>
+
+<!-- Load a custom element definitions in `waitFor` and return a promise -->
+<script type="module">
+    WebComponents.waitFor(() => {
+        // At this point we are guaranteed that all required polyfills have
+        // loaded, and can use web components API's.
+        // The standard pattern is to load element definitions that call
+        // `customElements.define` here.
+        // Note: returning the import's promise causes the custom elements
+        // polyfill to wait until all definitions are loaded and then upgrade
+        // the document in one batch, for better performance.
+        appReady = true;
+        if (fetchedUser) {
+            document.getElementById('app').set('user', fetchedUser);
+        }
+        document.getElementById('app').addEventListener('is-attached-changed', (e) => {
+            console.log('yy', e.detail.value === true);
+            if (e.detail.value === true) {
+                concludeLoading('app');
+            }
         });
-    </script>
-</body>
+        return import('./src/gin-app.js');
+    });
+</script>
+<script>
+    const loadedSections = [];
+    let loaded = false;
+    let appReady = false;
+    let fetchedUser;
+
+    function concludeLoading(sectionLabel) {
+        if (loaded) {
+            return;
+        }
+        loadedSections.push(sectionLabel);
+        if (loadedSections.indexOf('app') === -1 || loadedSections.indexOf('user') === -1) {
+            return;
+        }
+        console.log('l')
+        document.getElementById('app').style.display = 'block';
+        const shell = document.getElementById('loading-shell');
+        while (shell.firstChild) {
+            shell.removeChild(shell.firstChild);
+        }
+        document.body.removeChild(shell);
+        loaded = true;
+    }
+</script>
 
 </html>

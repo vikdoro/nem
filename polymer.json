@@ -1,20 +1,18 @@
 {
-    "lint": {
-        "rules": [
-            "polymer-2"
-        ]
-    },
-    "entrypoint": "public/index.html",
-    "shell": "public/gin-app.html",
+    "entrypoint": "index.html",
+    "shell": "src/gin-app.js",
+    "sources": [
+        "src/gin-app.js",
+        "assets/**/*"
+    ],
+    "extraDependencies": [
+        "node_modules/@webcomponents/webcomponentsjs/**"
+    ],
+    "moduleResolution": "node",
+    "npm": true,
     "builds": [
         {
             "preset": "es5-bundled"
         }
-    ],
-    "sources": [
-        "public/*/**"
-    ],
-    "extraDependencies": [
-        "public/bower_components/webcomponentsjs/**/*"
     ]
 }

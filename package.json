@@ -1,28 +1,28 @@
 {
+  "description": "",
   "name": "glitch-pg",
+  "main": "src/gin-app.js",
   "version": "1.0.0",
   "scripts": {
-    "start": "polyserve --port $PORT",
-    "build": "gulp build"
+    "start": "polyserve --port $PORT"
   },
   "dependencies": {
     "@babel/preset-env": "^7.1.0",
-    "babel-core": "^6.26.3",
-    "babel-plugin-transform-remove-strict-mode": "0.0.2",
-    "bower": "^1.8.0",
-    "css-slam": "^2.1.2",
-    "del": "^3.0.0",
-    "gulp": "^3.9.1",
-    "gulp-autoprefixer-html": "^1.0.1",
-    "gulp-babel": "^8.0.0",
-    "gulp-html-minifier": "^0.1.8",
-    "gulp-html-replace": "^1.6.2",
-    "gulp-if": "^2.0.2",
-    "gulp-strip-comments": "^2.5.2",
-    "gulp-uglify-es": "^1.0.4",
-    "merge-stream": "^1.0.1",
-    "polymer-build": "^3.0.4",
-    "polyserve": "^0.27.12"
+    "@polymer/iron-icons": "^3.0.0-pre.18",
+    "@polymer/iron-pages": "^3.0.0-pre.18",
+    "@polymer/paper-dialog": "^3.0.0-pre.18",
+    "@polymer/paper-spinner": "^3.0.1",
+    "@polymer/polymer": "^3.0.0",
+    "@webcomponents/webcomponentsjs": "^2.1.3",
+    "firebase": "^5.5.4",
+    "polyserve": "^0.27.13"
   },
-  "license": "ISC"
+  "license": "ISC",
+  "resolutions": {
+    "inherits": "2.0.3",
+    "samsam": "1.1.3",
+    "supports-color": "3.1.2",
+    "type-detect": "1.0.0"
+  },
+  "devDependencies": {}
 }

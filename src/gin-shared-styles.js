@@ -1,5 +1,7 @@
-<link rel="import" href="bower_components/polymer/lib/elements/custom-style.html">
-<dom-module id="gin-shared-styles">
+import '@polymer/polymer/lib/elements/custom-style.js';
+const $_documentContainer = document.createElement('template');
+
+$_documentContainer.innerHTML = `<dom-module id="gin-shared-styles">
     <template>
         <style>
             :host {
@@ -11,11 +13,13 @@
                 --gin-blue-200: #1565c0;
             }
             button {
+                display: block;
                 position: relative;
                 padding: 17px 32px 17px;
                 border-radius: 2px;
                 cursor: pointer;
-                border: none;
+                box-sizing: border-box;
+                border: 1px solid var(--gin-blue-200);
                 font-family: 'Nunito', sans-serif;
                 font-size: 16px;
                 letter-spacing: .25px;
@@ -25,7 +29,7 @@
             }
             button > *:not(iron-icon) {
                 display: block;
-                width: 88px;
+                min-width: 120px;
                 text-align: center;
             }
             button .label {
@@ -58,7 +62,6 @@
                 color: var(--gin-grey-200);
                 border: 1px solid var(--gin-grey-100);
                 padding: 15px 31px 15px;
-                margin: 0;
                 transition: border-color 250ms, color 250ms;
             }
 
@@ -128,6 +131,51 @@
             h3 {
                 margin: 0;
             }
+            .l-pv-2 {
+                padding-top: 16px;
+                padding-bottom: 16px;
+            }
+            .l-pv-3 {
+                padding-top: 24px;
+                padding-bottom: 24px;
+            }
+            .l-pv-4 {
+                padding-top: 32px;
+                padding-bottom: 32px;
+            }
+            .l-ps-3 {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+            .l-ps-4 {
+                padding-left: 32px;
+                padding-right: 32px;
+            }
+
+            .l-p-3 {
+                padding: 24px;
+            }
+
+            .l-pr-3 {
+                padding-right: 24px;
+            }
+
+            .l-pb-2 {
+                padding-bottom: 16px;
+            }
+
+            .l-pb-3 {
+                padding-bottom: 24px;
+            }
+
+            .l-pl-3 {
+                padding-left: 24px;
+            }
+
+            .l-m-auto {
+                margin-left: auto;
+                margin-right: auto;
+            }
 
             .l-m-1 {
                 margin: 8px 0;
@@ -137,20 +185,46 @@
                 margin: 16px 0;
             }
 
+            .l-mr-1 {
+                margin-right: 8px;
+            }
+
             .l-mr-2 {
                 margin-right: 16px;
+            }
+
+            .l-mr-3 {
+                margin-right: 16px;
+            }
+
+            .l-mb-2 {
+                margin-bottom: 16px;
+            }
+
+            .l-mb-3 {
+                margin-bottom: 24px;
+            }
+
+            .l-mb-4 {
+                margin-bottom: 32px;
             }
 
             .l-relative {
                 position: relative;
             }
 
-            .concealed-input {
-                border: none;
+            .l-dialog-padding {
+                padding: 40px;
+            }
+
+            input.concealed-input {
+                border: 1px solid transparent;
             }
 
             input {
                 font-family: 'Nunito', sans-serif;
+                font-size: 16px;
+                padding: 4px 0 4px 1px;
             }
 
             input:focus {
@@ -192,4 +266,6 @@
             }
         </style>
     </template>
-</dom-module>
+</dom-module>`;
+
+document.head.appendChild($_documentContainer.content);
